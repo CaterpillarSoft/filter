@@ -1,41 +1,51 @@
-# 复杂筛选条件组件 (Multiple Filter Component)
+# Multiple Filter Component
 
-## 需求描述
+一个功能强大、灵活且易于使用的 React 多重筛选条件组件，基于 shadcn UI 构建
 
-开发一个复杂的筛选条件组件，具有以下特点：
+![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
 
-1. 基本形式是一个输入框
-2. 点击输入框后，以下拉菜单形式显示可选的筛选项
-3. 选择筛选项后，显示对应的筛选方法（如日期选择器、下拉选择、自定义输入等）
-4. 已选择的筛选条件以标签形式展示在某个区域
-5. 支持删除单个筛选条件或清除全部条件
-6. 支持多种复杂筛选模式：日期筛选、选择筛选、自定义筛选等
-7. 基于 shadcn UI 组件库开发
-8. 采用表单形式实现（如使用 React Hook Form），提高易用性
+## 📝 简介
 
-## 技术栈
+Multiple Filter Component 是一个用于处理复杂筛选场景的 React 组件。它允许用户通过直观的界面选择和应用多种筛选条件，支持文本输入、下拉选择、日期选择等多种筛选方式。组件以标签形式展示已应用的筛选条件，并支持单个或批量删除。
 
-- React
-- TypeScript
-- shadcn UI
-- React Hook Form
+## ✨ 特性
 
-## 开发计划
+- 🔍 支持多种筛选类型：文本输入、下拉选择、日期选择等
+- 🏷️ 以标签形式展示已应用的筛选条件
+- 🗑️ 支持删除单个筛选条件或清空全部条件
+- 📱 响应式设计，适配各种屏幕尺寸
+- 🎨 基于 shadcn UI 构建，美观且可定制
+- 📋 与 React Hook Form 集成，提供便捷的表单操作 API
+- ♿ 完整的无障碍支持和键盘导航
+- 🌙 支持亮色/暗色模式
+- 🔒 支持禁用状态
 
-1. 设计组件接口和数据结构
-2. 实现基础输入框和下拉菜单
-3. 实现各类筛选方法（日期、选择、自定义等）
-4. 实现筛选条件标签展示和删除功能
-5. 集成 React Hook Form
-6. 编写文档和示例
+## 🚀 安装
 
-## 使用示例
+使用 npm:
 
-### 基本使用
+```bash
+npm install multiple-filter-component
+```
+
+使用 yarn:
+
+```bash
+yarn add multiple-filter-component
+```
+
+使用 pnpm:
+
+```bash
+pnpm add multiple-filter-component
+```
+
+## 🔧 基本使用
 
 ```tsx
-import { MultipleFilter } from './components/multipleFilter';
-import type { FilterOption, AppliedFilter } from './components/multipleFilter';
+import { MultipleFilter } from 'multiple-filter-component';
+import type { FilterOption, AppliedFilter } from 'multiple-filter-component';
 import { useState } from 'react';
 
 // 定义筛选选项
@@ -61,7 +71,7 @@ const filterOptions: FilterOption[] = [
   }
 ];
 
-function MyComponent() {
+function App() {
   const [filters, setFilters] = useState<AppliedFilter[]>([]);
 
   const handleFilterChange = (newFilters: AppliedFilter[]) => {
@@ -86,7 +96,11 @@ function MyComponent() {
 }
 ```
 
-### 组件属性
+## 📖 API 文档
+
+### MultipleFilter 组件
+
+#### 属性
 
 | 属性名 | 类型 | 必填 | 默认值 | 描述 |
 | --- | --- | --- | --- | --- |
@@ -99,11 +113,10 @@ function MyComponent() {
 
 ### 类型定义
 
-```tsx
-/**
- * 筛选项类型定义
- */
-export type FilterOption = {
+#### FilterOption
+
+```typescript
+type FilterOption = {
   /** 筛选项唯一标识 */
   id: string;
   /** 筛选项显示名称 */
@@ -120,20 +133,138 @@ export type FilterOption = {
   /** 是否允许多选（当type为select时使用） */
   multiple?: boolean;
   /** 自定义渲染函数（当type为custom时使用） */
-  renderCustomFilter?: (props: { onChange: (value: any) => void; value: any }) => React.ReactNode;
+  renderCustomFilter?: (props: CustomFilterProps) => ReactNode;
 };
+```
 
-/**
- * 已应用的筛选条件类型
- */
-export type AppliedFilter = {
+#### AppliedFilter
+
+```typescript
+type AppliedFilter = {
   /** 筛选项唯一标识 */
   optionId: string;
   /** 筛选项显示名称 */
   label: string;
   /** 筛选值 */
-  value: any;
+  value: FilterValue;
   /** 筛选值的显示文本 */
   displayValue: string;
 };
 ```
+
+#### FilterValue
+
+```typescript
+type FilterValue = string | number | Date | Array<string | number> | null;
+```
+
+#### CustomFilterProps
+
+```typescript
+interface CustomFilterProps {
+  /** 值变化时的回调函数 */
+  onChange: (value: FilterValue) => void;
+  /** 当前值 */
+  value: FilterValue;
+  /** 是否禁用 */
+  disabled?: boolean;
+}
+```
+
+## 🧩 高级用法
+
+### 自定义筛选类型
+
+您可以使用 `custom` 类型创建自定义的筛选方法：
+
+```tsx
+const customFilterOptions: FilterOption[] = [
+  // ... 其他选项
+  {
+    id: 'price',
+    label: '价格范围',
+    type: 'custom',
+    renderCustomFilter: ({ onChange, value, disabled }) => (
+      <div className="flex gap-2">
+        <Input 
+          type="number" 
+          placeholder="最低价" 
+          value={(value as any)?.min || ''} 
+          onChange={(e) => {
+            const min = Number(e.target.value);
+            const max = (value as any)?.max;
+            onChange({ min, max });
+          }}
+          disabled={disabled}
+        />
+        <span>-</span>
+        <Input 
+          type="number" 
+          placeholder="最高价" 
+          value={(value as any)?.max || ''} 
+          onChange={(e) => {
+            const max = Number(e.target.value);
+            const min = (value as any)?.min;
+            onChange({ min, max });
+          }}
+          disabled={disabled}
+        />
+        <Button 
+          onClick={() => {
+            // 处理确认逻辑
+          }}
+          disabled={disabled}
+        >
+          确定
+        </Button>
+      </div>
+    )
+  }
+];
+```
+
+### 与 React Hook Form 集成
+
+组件内部已经集成了 React Hook Form，您可以利用它提供的强大功能：
+
+```tsx
+import { useForm } from 'react-hook-form';
+
+function FilterForm() {
+  const form = useForm({
+    defaultValues: {
+      searchTerm: '',
+      // 其他表单字段
+    }
+  });
+  
+  const onSubmit = (data) => {
+    // 处理表单提交
+    console.log('表单数据:', data);
+  };
+  
+  return (
+    <form onSubmit={form.handleSubmit(onSubmit)}>
+      <input {...form.register('searchTerm')} />
+      
+      <MultipleFilter 
+        filterOptions={filterOptions}
+        onChange={(filters) => {
+          // 将筛选条件与表单集成
+          form.setValue('filters', filters);
+        }}
+      />
+      
+      <button type="submit">搜索</button>
+    </form>
+  );
+}
+```
+
+## 🤝 贡献
+
+欢迎贡献代码、报告问题或提出新功能建议！请查看 [贡献指南](CONTRIBUTING.md) 了解更多信息。
+
+## 📄 许可证
+
+本项目基于 [MIT 许可证](LICENSE) 开源。
