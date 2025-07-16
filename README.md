@@ -5,6 +5,10 @@
 
 一个功能强大、灵活且易于使用的 React 多重筛选条件组件，基于 Ant Design 构建。
 
+![Multiple Filter Component Demo](./public/demo.gif)
+
+*组件演示：展示筛选条件的添加、删除和交互过程*
+
 ## 目录
 
 - [Multiple Filter Component](#multiple-filter-component)
