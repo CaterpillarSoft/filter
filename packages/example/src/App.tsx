@@ -1,7 +1,7 @@
-import type { AppliedFilter, FilterOption } from './components/multipleFilter'
+import type { AppliedFilter, FilterOption } from '@caterpillarsoft/filter'
+import { MultipleFilter } from '@caterpillarsoft/filter'
 import { Button } from 'antd'
 import { useState } from 'react'
-import { MultipleFilter } from './components/multipleFilter'
 
 // 示例筛选选项
 const exampleFilterOptions: FilterOption[] = [

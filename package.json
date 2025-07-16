@@ -1,34 +1,29 @@
 {
-  "name": "multiple-filter",
   "type": "module",
-  "version": "0.0.0",
-  "private": true,
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "preview": "vite preview",
-    "format": "eslint --ext .ts,.tsx --fix  --cache ."
+  "version": "0.1.0",
+  "description": "一个功能强大、灵活且易于使用的 React 多重筛选条件组件，基于 Ant Design 构建。",
+  "keywords": [
+    "react",
+    "ant design",
+    "multiple filter",
+    "filter",
+    "search",
+    "select",
+    "checkbox"
+  ],
+  "engines": {
+    "node": "^18.0.0 || ^20.0.0 || >=22.0.0",
+    "pnpm": ">=9.6.0"
   },
-  "dependencies": {
-    "@ant-design/icons": "^6.0.0",
-    "@hookform/resolvers": "^5.1.1",
-    "@tailwindcss/vite": "^4.1.11",
-    "antd": "^5.26.5",
-    "date-fns": "^4.1.0",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "react-hook-form": "^7.60.0",
-    "tailwindcss": "^4.1.11"
+  "scripts": {
+    "preinstall": "npx only-allow pnpm",
+    "dev": "pnpm -r --parallel --filter='./packages/*' run dev",
+    "build": "pnpm -r --filter='./packages/*' run build",
+    "format": "eslint --ext .ts,.tsx --fix  --cache ."
   },
   "devDependencies": {
     "@antfu/eslint-config": "^4.17.0",
-    "@types/node": "^24.0.13",
-    "@types/react": "^19.1.8",
-    "@types/react-dom": "^19.1.6",
-    "@vitejs/plugin-react": "^4.6.0",
     "eslint": "^9.30.1",
-    "typescript": "~5.8.3",
-    "vite": "^7.0.4"
+    "typescript": "~5.8.3"
   }
 }
