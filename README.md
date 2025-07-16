@@ -1,4 +1,4 @@
-# Multiple Filter Component
+# @caterpillarsoft/filter
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
@@ -11,13 +11,12 @@
 
 ## 目录
 
-- [Multiple Filter Component](#multiple-filter-component)
+- [@caterpillarsoft/filter](#caterpillarsoftfilter)
   - [目录](#目录)
   - [简介](#简介)
   - [特性](#特性)
   - [安装](#安装)
     - [依赖安装](#依赖安装)
-    - [样式导入](#样式导入)
   - [快速开始](#快速开始)
   - [API 参考](#api-参考)
     - [MultipleFilter](#multiplefilter)
@@ -61,29 +60,21 @@ Multiple Filter Component 是一个用于处理复杂筛选场景的 React 组�
 
 ```bash
 # npm
-npm install antd @ant-design/icons react-hook-form date-fns
+npm install @caterpillarsoft/filter
 
 # yarn
-yarn add antd @ant-design/icons react-hook-form date-fns
+yarn add @caterpillarsoft/filter
 
 # pnpm
-pnpm add antd @ant-design/icons react-hook-form date-fns
-```
-
-### 样式导入
-
-在你的主入口文件中导入 Ant Design 样式：
-
-```tsx
-import 'antd/dist/reset.css'
+pnpm add @caterpillarsoft/filter
 ```
 
 ## 快速开始
 
 ```tsx
-import type { AppliedFilter, FilterOption } from './components/multipleFilter'
+import type { AppliedFilter, FilterOption } from '@caterpillarsoft/filter'
+import { MultipleFilter } from '@caterpillarsoft/filter'
 import { useState } from 'react'
-import { MultipleFilter } from './components/multipleFilter'
 
 // 定义筛选选项
 const filterOptions: FilterOption[] = [
@@ -230,9 +221,9 @@ interface CustomFilterProps {
 最基本的组件使用方式：
 
 ```tsx
-import type { AppliedFilter, FilterOption } from './components/multipleFilter'
+import type { AppliedFilter, FilterOption } from '@caterpillarsoft/filter'
+import { MultipleFilter } from '@caterpillarsoft/filter'
 import { useState } from 'react'
-import { MultipleFilter } from './components/multipleFilter'
 
 const filterOptions: FilterOption[] = [
   {
@@ -269,9 +260,9 @@ function BasicExample() {
 通过 `initialFilters` 属性设置初始筛选条件：
 
 ```tsx
-import type { AppliedFilter, FilterOption } from './components/multipleFilter'
+import type { AppliedFilter, FilterOption } from '@caterpillarsoft/filter'
+import { MultipleFilter } from '@caterpillarsoft/filter'
 import { useState } from 'react'
-import { MultipleFilter } from './components/multipleFilter'
 
 function InitialFiltersExample() {
   // 定义初始筛选条件
@@ -308,8 +299,8 @@ function InitialFiltersExample() {
 使用 `disabled` 属性禁用组件：
 
 ```tsx
+import { MultipleFilter } from '@caterpillarsoft/filter'
 import { useState } from 'react'
-import { MultipleFilter } from './components/multipleFilter'
 
 function DisabledExample() {
   const [isDisabled, setIsDisabled] = useState(false)
@@ -335,8 +326,8 @@ function DisabledExample() {
 使用 `custom` 类型创建自定义筛选方法：
 
 ```tsx
+import { MultipleFilter } from '@caterpillarsoft/filter'
 import { Button, Input } from 'antd'
-import { MultipleFilter } from './components/multipleFilter'
 
 const customFilterOptions: FilterOption[] = [
   // ... 其他选项
@@ -394,8 +385,8 @@ function CustomFilterExample() {
 组件内部已经集成了 React Hook Form，可以与表单一起使用：
 
 ```tsx
+import { MultipleFilter } from '@caterpillarsoft/filter'
 import { useForm } from 'react-hook-form'
-import { MultipleFilter } from './components/multipleFilter'
 
 function FormIntegrationExample() {
   const form = useForm({
