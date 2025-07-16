@@ -34,9 +34,9 @@
 ### 基本使用
 
 ```tsx
-import { MultipleFilter } from './components/multipleFilter';
-import type { FilterOption, AppliedFilter } from './components/multipleFilter';
-import { useState } from 'react';
+import type { AppliedFilter, FilterOption } from './components/multipleFilter'
+import { useState } from 'react'
+import { MultipleFilter } from './components/multipleFilter'
 
 // 定义筛选选项
 const filterOptions: FilterOption[] = [
@@ -59,30 +59,30 @@ const filterOptions: FilterOption[] = [
     label: '创建日期',
     type: 'date'
   }
-];
+]
 
 function MyComponent() {
-  const [filters, setFilters] = useState<AppliedFilter[]>([]);
+  const [filters, setFilters] = useState<AppliedFilter[]>([])
 
   const handleFilterChange = (newFilters: AppliedFilter[]) => {
-    setFilters(newFilters);
-    console.log('筛选条件变化:', newFilters);
-    
+    setFilters(newFilters)
+    console.log('筛选条件变化:', newFilters)
+
     // 这里可以根据筛选条件进行数据查询等操作
-  };
+  }
 
   return (
     <div>
-      <MultipleFilter 
-        filterOptions={filterOptions} 
+      <MultipleFilter
+        filterOptions={filterOptions}
         onChange={handleFilterChange}
         placeholder="请添加筛选条件"
       />
-      
+
       {/* 显示当前筛选条件 */}
       <pre>{JSON.stringify(filters, null, 2)}</pre>
     </div>
-  );
+  )
 }
 ```
 
@@ -103,37 +103,37 @@ function MyComponent() {
 /**
  * 筛选项类型定义
  */
-export type FilterOption = {
+export interface FilterOption {
   /** 筛选项唯一标识 */
-  id: string;
+  id: string
   /** 筛选项显示名称 */
-  label: string;
+  label: string
   /** 筛选项类型: 'select' | 'date' | 'dateRange' | 'input' | 'custom' */
-  type: 'select' | 'date' | 'dateRange' | 'input' | 'custom';
+  type: 'select' | 'date' | 'dateRange' | 'input' | 'custom'
   /** 筛选项可选值（当type为select时使用） */
   options?: Array<{
     /** 选项值 */
-    value: string | number;
+    value: string | number
     /** 选项标签 */
-    label: string;
-  }>;
+    label: string
+  }>
   /** 是否允许多选（当type为select时使用） */
-  multiple?: boolean;
+  multiple?: boolean
   /** 自定义渲染函数（当type为custom时使用） */
-  renderCustomFilter?: (props: { onChange: (value: any) => void; value: any }) => React.ReactNode;
-};
+  renderCustomFilter?: (props: { onChange: (value: any) => void, value: any }) => React.ReactNode
+}
 
 /**
  * 已应用的筛选条件类型
  */
-export type AppliedFilter = {
+export interface AppliedFilter {
   /** 筛选项唯一标识 */
-  optionId: string;
+  optionId: string
   /** 筛选项显示名称 */
-  label: string;
+  label: string
   /** 筛选值 */
-  value: any;
+  value: any
   /** 筛选值的显示文本 */
-  displayValue: string;
-};
+  displayValue: string
+}
 ```
