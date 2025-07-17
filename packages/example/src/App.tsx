@@ -1,6 +1,9 @@
 import type { AppliedFilter, FilterOption } from '@caterpillarsoft/filter'
 import { MultipleFilter } from '@caterpillarsoft/filter'
+import { Table } from 'antd'
 import { useState } from 'react'
+import useSWR from 'swr'
+import { fetcher } from './mock'
 
 const exampleFilterOptions: FilterOption[] = [
   {
@@ -63,6 +66,8 @@ const exampleFilterOptions: FilterOption[] = [
       { value: 'g1', label: 'G1' },
       { value: 'g2', label: 'G2' },
       { value: 'c1', label: 'C1' },
+      { value: 'm1', label: 'M1' },
+      { value: 'r1', label: 'R1' },
     ],
   },
   {
@@ -78,6 +83,7 @@ const exampleFilterOptions: FilterOption[] = [
       { value: 'zone-a', label: '可用区A' },
       { value: 'zone-b', label: '可用区B' },
       { value: 'zone-c', label: '可用区C' },
+      { value: 'zone-d', label: '可用区D' },
     ],
   },
 ]
@@ -100,7 +106,50 @@ const initialFilters: AppliedFilter[] = [
 
 function App() {
   const [filters, setFilters] = useState<AppliedFilter[]>(initialFilters)
+  const { data: instances, isLoading } = useSWR('/api/instances', fetcher)
   const [disabled, setDisabled] = useState(false)
+
+  // 根据筛选条件过滤数据
+  const filteredInstances = instances?.filter((instance) => {
+    return filters.every((filter) => {
+      const filterValue = filter.value
+      if (filterValue === null)
+        return true
+
+      switch (filter.optionId) {
+        case 'name':
+          return typeof filterValue === 'string' && instance.name.toLowerCase().includes(filterValue.toLowerCase())
+        case 'status':
+          return instance.status === filterValue
+        case 'ip':
+          return typeof filterValue === 'string' && instance.ip.includes(filterValue)
+        case 'publicIp':
+          return typeof filterValue === 'string' && instance.publicIp.includes(filterValue)
+        case 'rdmaIp':
+          return typeof filterValue === 'string' && instance.rdmaIp.includes(filterValue)
+        case 'instanceType':
+          return instance.instanceType === filterValue
+        case 'instanceFamily':
+          return instance.instanceFamily === filterValue
+        case 'vpcId':
+          return typeof filterValue === 'string' && instance.vpcId.includes(filterValue)
+        case 'zone':
+          return instance.zone === filterValue
+        default:
+          return true
+      }
+    })
+  }) || []
+
+  const columns = [
+    { title: 'ID', dataIndex: 'id', key: 'id' },
+    { title: '名称', dataIndex: 'name', key: 'name' },
+    { title: '状态', dataIndex: 'status', key: 'status' },
+    { title: 'IP地址', dataIndex: 'ip', key: 'ip' },
+    { title: '公网IP', dataIndex: 'publicIp', key: 'publicIp' },
+    { title: '可用区', dataIndex: 'zone', key: 'zone' },
+    { title: '实例规格', dataIndex: 'instanceType', key: 'instanceType' },
+  ]
 
   const handleFilterChange = (newFilters: AppliedFilter[]) => {
     setFilters(newFilters)
@@ -134,6 +183,29 @@ function App() {
       </div>
 
       <div className="mb-8">
+        <h2 className="text-xl font-semibold mb-4">数据状态</h2>
+        <div className="border p-4 rounded-md">
+          {isLoading
+            ? (
+                <p className="text-blue-500">加载中...</p>
+              )
+            : (
+                <div>
+                  <p className="text-green-600 mb-2">数据加载成功</p>
+                  <p>
+                    总数据量:
+                    {instances?.length || 0}
+                  </p>
+                  <p>
+                    筛选后数据量:
+                    {filteredInstances.length}
+                  </p>
+                </div>
+              )}
+        </div>
+      </div>
+
+      <div className="mb-8">
         <h2 className="text-xl font-semibold mb-4">当前筛选条件</h2>
         <div className="border p-4 rounded-md">
           {filters.length > 0
@@ -146,6 +218,20 @@ function App() {
                 <p className="text-gray-500">暂无筛选条件</p>
               )}
         </div>
+      </div>
+
+      <div className="mb-8">
+        <Table
+          dataSource={filteredInstances}
+          loading={isLoading}
+          columns={columns}
+          rowKey="id"
+          pagination={{
+            pageSize: 20,
+            showSizeChanger: true,
+            showQuickJumper: true,
+          }}
+        />
       </div>
     </div>
   )
