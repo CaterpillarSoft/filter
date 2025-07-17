@@ -13,9 +13,99 @@ import {
 } from 'antd'
 import { format } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
-import { useState } from 'react'
-
+import { useEffect, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
+import styled from 'styled-components'
+
+// Styled Components
+const FilterContainer = styled.div`
+  .multiple-filter {
+    width: 100%;
+  }
+`
+
+const FilterWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`
+
+const InputWrapper = styled.div`
+  position: relative;
+  flex: 1;
+`
+
+const PopoverContent = styled.div`
+  width: 320px;
+`
+
+const SearchInput = styled(Input)`
+  margin-bottom: 8px;
+`
+
+const OptionsList = styled.div`
+  max-height: 192px;
+  overflow-y: auto;
+`
+
+const OptionItem = styled.div`
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: 4px;
+  
+  &:hover {
+    background-color: #f5f5f5;
+  }
+`
+
+const FilterHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+`
+
+const FilterTitle = styled.h4`
+  font-weight: 500;
+  margin: 0;
+`
+
+const MultiSelectContainer = styled.div`
+  max-height: 192px;
+  overflow-y: auto;
+`
+
+const MultiSelectFooter = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`
+
+const SelectedCount = styled.span`
+  font-size: 14px;
+  color: #666;
+`
+
+const TagsContainer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+`
+
+const DisabledTag = styled(Tag)`
+  opacity: 0.7;
+`
+
+const CursorInput = styled(Input)`
+  cursor: pointer;
+`
+
+const NoResultsMessage = styled.div`
+  padding: 12px;
+  text-align: center;
+  color: #999;
+`
 
 /** 筛选值类型 */
 export type FilterValue = string | number | Date | Array<string | number> | Array<Date> | null
@@ -75,7 +165,7 @@ export interface MultipleFilterProps {
   /** 可用的筛选选项列表 */
   filterOptions: FilterOption[]
 
-  /** 初始已应用的筛选条件 */
+  /** 初始已应用的筛选条件 只在初次渲染时设置初始值，后续变化不会自动更新值。 */
   initialFilters?: AppliedFilter[]
 
   /** 筛选条件变化时的回调函数 */
@@ -127,6 +217,9 @@ export const MultipleFilter: FC<MultipleFilterProps> = ({
 
   // 控制下拉菜单的开关状态
   const [isOpen, setIsOpen] = useState(false)
+
+  // 搜索关键词状态
+  const [searchKeyword, setSearchKeyword] = useState('')
 
   // 获取当前选中的筛选选项
   const selectedOption = currentFilterOptionId
@@ -241,6 +334,7 @@ export const MultipleFilter: FC<MultipleFilterProps> = ({
     setValue('currentFilter.optionId', option.id)
     setValue('currentFilter.value', null)
     setMultiSelectValues([])
+    setSearchKeyword('') // 清空搜索关键词
   }
 
   /**
@@ -282,6 +376,7 @@ export const MultipleFilter: FC<MultipleFilterProps> = ({
       setValue('currentFilter.optionId', null)
       setValue('currentFilter.value', null)
       setMultiSelectValues([])
+      setSearchKeyword('') // 清空搜索关键词
     }
   }
 
@@ -303,6 +398,29 @@ export const MultipleFilter: FC<MultipleFilterProps> = ({
   }
 
   /**
+   * 处理搜索关键词变化
+   * @param value - 搜索关键词
+   */
+  const handleSearchChange = (value: string) => {
+    setSearchKeyword(value)
+  }
+
+  /**
+   * 根据搜索关键词过滤筛选选项
+   * @returns 过滤后的筛选选项数组
+   */
+  const getFilteredOptions = () => {
+    if (!searchKeyword.trim()) {
+      return filterOptions
+    }
+
+    const keyword = searchKeyword.toLowerCase().trim()
+    return filterOptions.filter(option =>
+      option.label.toLowerCase().includes(keyword),
+    )
+  }
+
+  /**
    * 渲染筛选项的筛选方法
    * 根据选中的筛选项类型渲染对应的筛选控件
    * @returns 渲染的筛选控件组件或null
@@ -317,7 +435,7 @@ export const MultipleFilter: FC<MultipleFilterProps> = ({
           // 多选模式
           return (
             <>
-              <div className="max-h-48 overflow-y-auto">
+              <MultiSelectContainer>
                 <Checkbox.Group
                   value={multiSelectValues}
                   onChange={handleMultiSelectChange}
@@ -335,16 +453,16 @@ export const MultipleFilter: FC<MultipleFilterProps> = ({
                     ))}
                   </Space>
                 </Checkbox.Group>
-              </div>
+              </MultiSelectContainer>
               <Divider />
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-500">
+              <MultiSelectFooter>
+                <SelectedCount>
                   已选择
                   {' '}
                   {multiSelectValues.length}
                   {' '}
                   项
-                </span>
+                </SelectedCount>
                 <Space>
                   <Button
                     size="small"
@@ -362,7 +480,7 @@ export const MultipleFilter: FC<MultipleFilterProps> = ({
                     确定
                   </Button>
                 </Space>
-              </div>
+              </MultiSelectFooter>
             </>
           )
         }
@@ -501,44 +619,51 @@ export const MultipleFilter: FC<MultipleFilterProps> = ({
   }
 
   return (
-    <div className={`multiple-filter ${className}`}>
-      <div className="flex flex-col space-y-2">
+    <FilterContainer className={`multiple-filter ${className}`}>
+      <FilterWrapper>
         {/* 搜索输入框 */}
-        <div className="relative flex-1">
+        <InputWrapper>
           <Popover
             open={disabled ? false : isOpen}
             onOpenChange={handlePopoverOpenChange}
             trigger="click"
             placement="bottomLeft"
             content={(
-              <div className="w-80">
+              <PopoverContent>
                 {!selectedOption
                   ? (
                       <>
-                        <div className="mb-2">
-                          <Input
-                            placeholder="搜索筛选条件..."
-                            prefix={<SearchOutlined />}
-                            size="small"
-                          />
-                        </div>
-                        <div className="max-h-48 overflow-y-auto">
-                          {filterOptions.map(option => (
-                            <div
-                              key={option.id}
-                              className="px-3 py-2 hover:bg-gray-100 cursor-pointer rounded"
-                              onClick={() => handleSelectFilterOption(option)}
-                            >
-                              {option.label}
-                            </div>
-                          ))}
-                        </div>
+                        <SearchInput
+                          placeholder="搜索筛选条件..."
+                          prefix={<SearchOutlined />}
+                          size="small"
+                          value={searchKeyword}
+                          onChange={e => handleSearchChange(e.target.value)}
+                        />
+                        <OptionsList>
+                          {getFilteredOptions().length > 0
+                            ? (
+                                getFilteredOptions().map(option => (
+                                  <OptionItem
+                                    key={option.id}
+                                    onClick={() => handleSelectFilterOption(option)}
+                                  >
+                                    {option.label}
+                                  </OptionItem>
+                                ))
+                              )
+                            : (
+                                <NoResultsMessage>
+                                  未找到匹配的筛选条件
+                                </NoResultsMessage>
+                              )}
+                        </OptionsList>
                       </>
                     )
                   : (
                       <>
-                        <div className="flex items-center justify-between mb-3">
-                          <h4 className="font-medium m-0">{selectedOption.label}</h4>
+                        <FilterHeader>
+                          <FilterTitle>{selectedOption.label}</FilterTitle>
                           <Button
                             type="text"
                             size="small"
@@ -551,39 +676,51 @@ export const MultipleFilter: FC<MultipleFilterProps> = ({
                           >
                             返回
                           </Button>
-                        </div>
+                        </FilterHeader>
                         {renderFilterMethod()}
                       </>
                     )}
-              </div>
+              </PopoverContent>
             )}
           >
-            <Input
+            <CursorInput
               placeholder={placeholder}
               prefix={<SearchOutlined />}
               readOnly
               onClick={handleInputClick}
               onBlur={handleInputBlur}
               disabled={disabled}
-              className="cursor-pointer"
             />
           </Popover>
-        </div>
+        </InputWrapper>
 
         {/* 已应用的筛选条件标签 */}
         {appliedFilters.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2">
+          <TagsContainer>
             {appliedFilters.map(filter => (
-              <Tag
-                key={`${filter.optionId}-${String(filter.value)}`}
-                closable={!disabled}
-                onClose={() => removeFilter(filter.optionId)}
-                className={disabled ? 'opacity-70' : ''}
-              >
-                {filter.label}
-                :
-                {filter.displayValue}
-              </Tag>
+              disabled
+                ? (
+                    <DisabledTag
+                      key={`${filter.optionId}-${String(filter.value)}`}
+                      closable={!disabled}
+                      onClose={() => removeFilter(filter.optionId)}
+                    >
+                      {filter.label}
+                      :
+                      {filter.displayValue}
+                    </DisabledTag>
+                  )
+                : (
+                    <Tag
+                      key={`${filter.optionId}-${String(filter.value)}`}
+                      closable={!disabled}
+                      onClose={() => removeFilter(filter.optionId)}
+                    >
+                      {filter.label}
+                      :
+                      {filter.displayValue}
+                    </Tag>
+                  )
             ))}
 
             {appliedFilters.length > 0 && (
@@ -596,10 +733,10 @@ export const MultipleFilter: FC<MultipleFilterProps> = ({
                 清空
               </Button>
             )}
-          </div>
+          </TagsContainer>
         )}
-      </div>
-    </div>
+      </FilterWrapper>
+    </FilterContainer>
   )
 }
 

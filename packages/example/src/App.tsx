@@ -1,9 +1,7 @@
 import type { AppliedFilter, FilterOption } from '@caterpillarsoft/filter'
 import { MultipleFilter } from '@caterpillarsoft/filter'
-import { Button } from 'antd'
 import { useState } from 'react'
 
-// 示例筛选选项
 const exampleFilterOptions: FilterOption[] = [
   {
     id: 'name',
@@ -108,10 +106,6 @@ function App() {
     setFilters(newFilters)
   }
 
-  const handleResetFilters = () => {
-    setFilters(initialFilters)
-  }
-
   const toggleDisabled = () => {
     setDisabled(!disabled)
   }
@@ -121,13 +115,9 @@ function App() {
       <h1 className="text-2xl font-bold mb-6">多重筛选条件组件示例</h1>
 
       <div className="mb-4 flex gap-4">
-        <Button onClick={handleResetFilters}>
-          重置为初始筛选条件
-        </Button>
-
-        <Button onClick={toggleDisabled}>
+        <button onClick={toggleDisabled}>
           {disabled ? '启用筛选器' : '禁用筛选器'}
-        </Button>
+        </button>
       </div>
 
       <div className="mb-8">
