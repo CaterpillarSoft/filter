@@ -61,6 +61,9 @@ export interface MultipleFilterProps {
   /** 初始已应用的筛选条件 */
   initialFilters?: AppliedFilter[]
 
+  /** 当前已应用的筛选条件（受控模式） */
+  value?: AppliedFilter[]
+
   /** 筛选条件变化时的回调函数 */
   onChange?: (filters: AppliedFilter[]) => void
 

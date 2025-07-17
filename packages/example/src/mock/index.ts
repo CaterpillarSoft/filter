@@ -23,7 +23,7 @@ function generateMockData() {
 
     data.push({
       id: i,
-      name: `实例-${String(i).padStart(3, '0')}`,
+      name: `实例+${String(i).padStart(3, '0')}`,
       status,
       ip,
       publicIp,

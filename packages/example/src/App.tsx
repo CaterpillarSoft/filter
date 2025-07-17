@@ -1,7 +1,6 @@
 import type { AppliedFilter, FilterOption } from '@caterpillarsoft/filter'
-import { MultipleFilter } from '@caterpillarsoft/filter'
+import { MultipleFilter, useSyncToUrl } from '@caterpillarsoft/filter'
 import { Table } from 'antd'
-import { useState } from 'react'
 import useSWR from 'swr'
 import { fetcher } from './mock'
 
@@ -105,9 +104,8 @@ const initialFilters: AppliedFilter[] = [
 ]
 
 function App() {
-  const [filters, setFilters] = useState<AppliedFilter[]>(initialFilters)
+  const [filters, setFilters] = useSyncToUrl(initialFilters)
   const { data: instances, isLoading } = useSWR('/api/instances', fetcher)
-  const [disabled, setDisabled] = useState(false)
 
   // 根据筛选条件过滤数据
   const filteredInstances = instances?.filter((instance) => {
@@ -155,84 +153,29 @@ function App() {
     setFilters(newFilters)
   }
 
-  const toggleDisabled = () => {
-    setDisabled(!disabled)
-  }
-
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6">多重筛选条件组件示例</h1>
-
-      <div className="mb-4 flex gap-4">
-        <button onClick={toggleDisabled}>
-          {disabled ? '启用筛选器' : '禁用筛选器'}
-        </button>
-      </div>
-
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-4">基本使用</h2>
-        <div className="border p-4 rounded-md">
-          <MultipleFilter
-            filterOptions={exampleFilterOptions}
-            initialFilters={initialFilters}
-            onChange={handleFilterChange}
-            placeholder="请添加筛选条件"
-            disabled={disabled}
-          />
-        </div>
-      </div>
-
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-4">数据状态</h2>
-        <div className="border p-4 rounded-md">
-          {isLoading
-            ? (
-                <p className="text-blue-500">加载中...</p>
-              )
-            : (
-                <div>
-                  <p className="text-green-600 mb-2">数据加载成功</p>
-                  <p>
-                    总数据量:
-                    {instances?.length || 0}
-                  </p>
-                  <p>
-                    筛选后数据量:
-                    {filteredInstances.length}
-                  </p>
-                </div>
-              )}
-        </div>
-      </div>
-
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-4">当前筛选条件</h2>
-        <div className="border p-4 rounded-md">
-          {filters.length > 0
-            ? (
-                <pre className="bg-gray-100 p-4 rounded overflow-auto">
-                  {JSON.stringify(filters, null, 2)}
-                </pre>
-              )
-            : (
-                <p className="text-gray-500">暂无筛选条件</p>
-              )}
-        </div>
-      </div>
-
-      <div className="mb-8">
-        <Table
-          dataSource={filteredInstances}
-          loading={isLoading}
-          columns={columns}
-          rowKey="id"
-          pagination={{
-            pageSize: 20,
-            showSizeChanger: true,
-            showQuickJumper: true,
-          }}
+      <div className="border p-4 rounded-md">
+        <MultipleFilter
+          filterOptions={exampleFilterOptions}
+          initialFilters={initialFilters}
+          value={filters}
+          onChange={handleFilterChange}
+          placeholder="请添加筛选条件"
         />
       </div>
+
+      <Table
+        dataSource={filteredInstances}
+        loading={isLoading}
+        columns={columns}
+        rowKey="id"
+        pagination={{
+          pageSize: 20,
+          showSizeChanger: true,
+          showQuickJumper: true,
+        }}
+      />
     </div>
   )
 }

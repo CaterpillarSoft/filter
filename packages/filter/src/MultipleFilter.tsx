@@ -14,13 +14,31 @@ import {
 } from 'antd'
 import { format } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
-import { CursorInput, DisabledTag, FilterContainer, FilterHeader, FilterTitle, FilterWrapper, InputWrapper, MultiSelectContainer, MultiSelectFooter, NoResultsMessage, OptionItem, OptionsList, PopoverContent, SearchInput, SelectedCount, TagsContainer } from './styles'
+import {
+  CursorInput,
+  DisabledTag,
+  FilterContainer,
+  FilterHeader,
+  FilterTitle,
+  FilterWrapper,
+  InputWrapper,
+  MultiSelectContainer,
+  MultiSelectFooter,
+  NoResultsMessage,
+  OptionItem,
+  OptionsList,
+  PopoverContent,
+  SearchInput,
+  SelectedCount,
+  TagsContainer,
+} from './styles'
 
 export const MultipleFilter: FC<MultipleFilterProps> = ({
   filterOptions,
   initialFilters = [],
+  value,
   onChange,
   placeholder = '添加筛选条件',
   disabled = false,
@@ -28,7 +46,7 @@ export const MultipleFilter: FC<MultipleFilterProps> = ({
 }) => {
   const { control, setValue, watch, reset } = useForm<FilterFormValues>({
     defaultValues: {
-      filters: initialFilters,
+      filters: value || initialFilters,
       currentFilter: {
         optionId: null,
         value: null,
@@ -53,6 +71,13 @@ export const MultipleFilter: FC<MultipleFilterProps> = ({
   const selectedOption = currentFilterOptionId
     ? filterOptions.find(option => option.id === currentFilterOptionId)
     : null
+
+  // 在受控模式下，当外部value变化时更新内部状态
+  useEffect(() => {
+    if (value) {
+      setValue('filters', value)
+    }
+  }, [value])
 
   /**
    * 处理筛选条件变化
