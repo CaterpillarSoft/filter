@@ -154,28 +154,28 @@ function App() {
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="border p-4 rounded-md">
-        <MultipleFilter
-          filterOptions={exampleFilterOptions}
-          initialFilters={initialFilters}
-          value={filters}
-          onChange={handleFilterChange}
-          placeholder="请添加筛选条件"
+    <div className="h-full flex flex-col">
+      <MultipleFilter
+        filterOptions={exampleFilterOptions}
+        initialFilters={initialFilters}
+        value={filters}
+        onChange={handleFilterChange}
+        placeholder="请添加筛选条件"
+      />
+
+      <div className="flex-1">
+        <Table
+          dataSource={filteredInstances}
+          loading={isLoading}
+          columns={columns}
+          rowKey="id"
+          pagination={{
+            pageSize: 20,
+            showSizeChanger: true,
+            showQuickJumper: true,
+          }}
         />
       </div>
-
-      <Table
-        dataSource={filteredInstances}
-        loading={isLoading}
-        columns={columns}
-        rowKey="id"
-        pagination={{
-          pageSize: 20,
-          showSizeChanger: true,
-          showQuickJumper: true,
-        }}
-      />
     </div>
   )
 }
