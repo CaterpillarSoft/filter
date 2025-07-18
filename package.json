@@ -2,6 +2,12 @@
   "type": "module",
   "version": "0.1.0",
   "description": "一个功能强大、灵活且易于使用的 React 多重筛选条件组件，基于 Ant Design 构建。",
+  "author": "caterpi11ar",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CaterpillarSoft/filter"
+  },
   "keywords": [
     "react",
     "ant design",

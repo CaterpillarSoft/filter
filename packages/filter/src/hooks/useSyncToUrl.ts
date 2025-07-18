@@ -8,14 +8,26 @@ import { useEffect, useState } from 'react'
  */
 export function useSyncToUrl(
   initialFilters: AppliedFilter[],
+  paramsKey = 'filters',
 ): [AppliedFilter[], (newFilters: AppliedFilter[]) => void] {
-  // 兼容旧的对象格式
-  const convertLegacyFormat = (legacy: Record<string, any>): AppliedFilter[] => {
-    return Object.entries(legacy)
+  // 将 AppliedFilter[] 转换为简化的 URL 格式 {optionId: value}
+  const serializeFilters = (filters: AppliedFilter[]): Record<string, any> => {
+    const result: Record<string, any> = {}
+    filters.forEach((filter) => {
+      if (filter.value !== undefined && filter.value !== null) {
+        result[filter.optionId] = filter.value
+      }
+    })
+    return result
+  }
+
+  // 将简化的 URL 格式转换为 AppliedFilter[]
+  const deserializeFilters = (data: Record<string, any>): AppliedFilter[] => {
+    return Object.entries(data)
       .filter(([_, value]) => value !== undefined && value !== null)
       .map(([optionId, value]) => ({
         optionId,
-        label: optionId,
+        label: optionId, // 简化处理，使用 optionId 作为 label
         value,
         displayValue: String(value),
       }))
@@ -24,14 +36,19 @@ export function useSyncToUrl(
   // 解析当前 URL 的查询参数
   const parseFiltersFromUrl = (): AppliedFilter[] => {
     const searchParams = new URLSearchParams(window.location.search)
-    const paramsValue = searchParams.get('filters')
+    const paramsValue = searchParams.get(paramsKey)
 
     if (!paramsValue)
       return [...initialFilters]
 
     try {
       const parsed = JSON.parse(paramsValue)
-      return Array.isArray(parsed) ? parsed : convertLegacyFormat(parsed)
+      // 支持新的简化格式 {optionId: value} 和旧的数组格式
+      return typeof parsed === 'object' && !Array.isArray(parsed)
+        ? deserializeFilters(parsed)
+        : Array.isArray(parsed)
+          ? parsed
+          : [...initialFilters]
     }
     catch (error) {
       console.error('Failed to parse URL filters:', error)
@@ -50,7 +67,9 @@ export function useSyncToUrl(
 
     const newSearchParams = new URLSearchParams()
     if (activeFilters.length > 0) {
-      newSearchParams.set('filters', JSON.stringify(activeFilters))
+      // 使用简化的格式保存到 URL
+      const simplifiedData = serializeFilters(activeFilters)
+      newSearchParams.set(paramsKey, JSON.stringify(simplifiedData))
     }
 
     const newUrl = newSearchParams.toString()
