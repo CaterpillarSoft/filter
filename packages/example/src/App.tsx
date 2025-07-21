@@ -104,7 +104,10 @@ const initialFilters: AppliedFilter[] = [
 ]
 
 function App() {
-  const [filters, setFilters] = useSyncToUrl(initialFilters)
+  /** start 单行搜索 */
+  const { filters, updateFilters, pagination, updatePagination, filterParams } = useSyncToUrl([])
+
+  /** end 单行搜索 */
   const { data: instances, isLoading } = useSWR('/api/instances', fetcher)
 
   // 根据筛选条件过滤数据
@@ -150,7 +153,7 @@ function App() {
   ]
 
   const handleFilterChange = (newFilters: AppliedFilter[]) => {
-    setFilters(newFilters)
+    updateFilters(newFilters)
   }
 
   return (
