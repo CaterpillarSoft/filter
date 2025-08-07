@@ -28,7 +28,8 @@
     "dev": "pnpm -r --parallel --filter='./packages/*' run dev",
     "build": "pnpm -r --filter='./packages/*' run build",
     "format": "eslint --ext .ts,.tsx --fix  --cache .",
-    "example": "pnpm --filter example run dev"
+    "example": "pnpm --filter example run dev",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^4.17.0",
