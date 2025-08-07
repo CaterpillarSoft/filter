@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 
 /** 筛选值类型 */
-export type FilterValue = string | number | Date | Array<string | number> | Array<Date> | null
+export type FilterValue = string | number | Date | Array<string | number> | Array<Date> | boolean | null | Record<string, any>
 
 /** 自定义筛选渲染函数的属性 */
 export interface CustomFilterProps {
@@ -22,13 +22,16 @@ export interface FilterOption {
   /** 筛选项显示名称 */
   label: string
 
+  /** 是否隐藏 */
+  hidden?: boolean
+
   /** 筛选项类型 */
   type: 'select' | 'date' | 'dateRange' | 'input' | 'custom'
 
   /** 筛选项可选值（当type为select时使用） */
   options?: Array<{
     /** 选项值 */
-    value: string | number
+    value: FilterValue
     /** 选项标签 */
     label: string
   }>
@@ -38,6 +41,9 @@ export interface FilterOption {
 
   /** 自定义渲染函数（当type为custom时使用） */
   renderCustomFilter?: (props: CustomFilterProps) => ReactNode
+
+  /** 显示值 */
+  renderDisplayValue?: (value: FilterValue) => string
 }
 
 export interface AppliedFilter {

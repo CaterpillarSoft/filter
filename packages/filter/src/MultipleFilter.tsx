@@ -1,9 +1,9 @@
-import type { FC } from 'react'
+import type { InputRef } from 'antd'
+import type { FC, RefObject } from 'react'
 import type { AppliedFilter, FilterFormValues, FilterOption, MultipleFilterProps } from './types'
 import { SearchOutlined } from '@ant-design/icons'
 import {
   Button,
-  Checkbox,
   DatePicker,
   Divider,
   Input,
@@ -12,9 +12,8 @@ import {
   Space,
   Tag,
 } from 'antd'
-import { format } from 'date-fns'
-import { zhCN } from 'date-fns/locale'
-import { useEffect, useState } from 'react'
+import dayjs from 'dayjs'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import {
   CursorInput,
@@ -34,13 +33,14 @@ import {
   SelectedCount,
   TagsContainer,
 } from './styles'
+import { filterOption } from './utils'
 
 export const MultipleFilter: FC<MultipleFilterProps> = ({
   filterOptions,
   initialFilters = [],
   value,
   onChange,
-  placeholder = '添加筛选条件',
+  placeholder,
   disabled = false,
   className = '',
 }) => {
@@ -53,13 +53,13 @@ export const MultipleFilter: FC<MultipleFilterProps> = ({
       },
     },
   })
-
+  const inputRef: RefObject<InputRef> = useRef(null)
   const appliedFilters = watch('filters')
   const currentFilterOptionId = watch('currentFilter.optionId')
   const currentFilterValue = watch('currentFilter.value')
 
   // 多选临时状态
-  const [multiSelectValues, setMultiSelectValues] = useState<Array<string | number>>([])
+  const [multiSelectValues, setMultiSelectValues] = useState<(string | number)[]>([])
 
   // 控制下拉菜单的开关状态
   const [isOpen, setIsOpen] = useState(false)
@@ -78,6 +78,17 @@ export const MultipleFilter: FC<MultipleFilterProps> = ({
       setValue('filters', value)
     }
   }, [value])
+
+  // 当选择 input 类型时，自动聚焦
+  useEffect(() => {
+    if (selectedOption?.type === 'input') {
+      const timer = setTimeout(() => {
+        inputRef.current?.focus()
+      }, 100) // 延迟以确保 input 渲染完成
+
+      return () => clearTimeout(timer) // 清除定时器
+    }
+  }, [selectedOption])
 
   /**
    * 处理筛选条件变化
@@ -118,7 +129,7 @@ export const MultipleFilter: FC<MultipleFilterProps> = ({
    * @param label - 选项标签
    * @param values - 选中的值数组
    */
-  const addMultiSelectFilter = (optionId: string, label: string, values: Array<string | number>) => {
+  const addMultiSelectFilter = (optionId: string, label: string, values: (string | number)[]) => {
     if (values.length === 0)
       return
 
@@ -127,12 +138,18 @@ export const MultipleFilter: FC<MultipleFilterProps> = ({
       existingFilter.optionId !== optionId,
     )
 
+    /** 展示可读的值 */
+    const displayValue = values.map((value) => {
+      const option = selectedOption?.options?.find(option => option.value?.toString() === value.toString())
+      return option?.label
+    }).join(', ')
+
     // 添加新的筛选条件
     const newFilter: AppliedFilter = {
       optionId,
       label,
       value: values,
-      displayValue: values.join(', '),
+      displayValue,
     }
 
     const newFilters = [...filteredFilters, newFilter]
@@ -197,6 +214,10 @@ export const MultipleFilter: FC<MultipleFilterProps> = ({
   const handleInputClick = () => {
     if (disabled)
       return
+    // 当只有一个筛选选项时，直接选中
+    if (filterOptions.length === 1) {
+      handleSelectFilterOption(filterOptions[0])
+    }
     setIsOpen(true)
   }
 
@@ -237,7 +258,7 @@ export const MultipleFilter: FC<MultipleFilterProps> = ({
    * 处理多选值变化
    * @param values - 选中的值数组
    */
-  const handleMultiSelectChange = (values: Array<string | number>) => {
+  const handleMultiSelectChange = (values: (string | number)[]) => {
     setMultiSelectValues(values)
   }
 
@@ -278,42 +299,39 @@ export const MultipleFilter: FC<MultipleFilterProps> = ({
    * 根据选中的筛选项类型渲染对应的筛选控件
    * @returns 渲染的筛选控件组件或null
    */
-  const renderFilterMethod = () => {
+  const renderFilterMethod = useCallback(() => {
     if (!selectedOption)
       return null
 
     switch (selectedOption.type) {
       case 'select':
         if (selectedOption.multiple) {
-          // 多选模式
+          // 多选模式 - 使用 Select 多选组件
           return (
             <>
               <MultiSelectContainer>
-                <Checkbox.Group
+                <Select
+                  defaultOpen
+                  mode="multiple"
+                  showSearch
+                  filterOption={filterOption}
+                  className="w-full"
+                  disabled={disabled}
                   value={multiSelectValues}
                   onChange={handleMultiSelectChange}
-                  disabled={disabled}
                 >
-                  <Space direction="vertical" className="w-full">
-                    {selectedOption.options?.map(option => (
-                      <Checkbox
-                        key={option.value.toString()}
-                        value={option.value}
-                        className="w-full"
-                      >
-                        {option.label}
-                      </Checkbox>
-                    ))}
-                  </Space>
-                </Checkbox.Group>
+                  {selectedOption.options?.map(option => (
+                    <Select.Option key={option.value?.toString()} value={option.value?.toString()}>
+                      {option.label}
+                    </Select.Option>
+                  ))}
+                </Select>
               </MultiSelectContainer>
               <Divider />
               <MultiSelectFooter>
                 <SelectedCount>
                   已选择
-                  {' '}
                   {multiSelectValues.length}
-                  {' '}
                   项
                 </SelectedCount>
                 <Space>
@@ -330,7 +348,7 @@ export const MultipleFilter: FC<MultipleFilterProps> = ({
                     onClick={confirmMultiSelect}
                     disabled={disabled || multiSelectValues.length === 0}
                   >
-                    确定
+                    确认
                   </Button>
                 </Space>
               </MultiSelectFooter>
@@ -341,13 +359,24 @@ export const MultipleFilter: FC<MultipleFilterProps> = ({
           // 单选模式
           return (
             <Select
-              placeholder={`选择${selectedOption.label}`}
+              defaultOpen
+              showSearch
+              filterOption={(input, option) => {
+                if (!option)
+                  return false
+
+                const str = Array.isArray(option.children) ? option.children.join('') : option.children
+
+                return !!((option.label as string)?.toLowerCase().includes(input.toLowerCase())
+                  || (option.value as string)?.toLowerCase().includes(input.toLowerCase())
+                  || str?.toLowerCase().includes(input.toLowerCase()))
+              }}
               className="w-full"
               disabled={disabled}
               onChange={(value) => {
                 if (disabled || !selectedOption.options)
                   return
-                const selectedOptionItem = selectedOption.options.find(opt => opt.value.toString() === value)
+                const selectedOptionItem = selectedOption.options.find(opt => opt.value?.toString() === value)
                 if (!selectedOptionItem)
                   return
 
@@ -360,7 +389,7 @@ export const MultipleFilter: FC<MultipleFilterProps> = ({
               }}
             >
               {selectedOption.options?.map(option => (
-                <Select.Option key={option.value.toString()} value={option.value.toString()}>
+                <Select.Option key={option.value?.toString()} value={option.value?.toString()}>
                   {option.label}
                 </Select.Option>
               ))}
@@ -375,7 +404,7 @@ export const MultipleFilter: FC<MultipleFilterProps> = ({
             control={control}
             render={({ field }) => (
               <Input
-                placeholder={`输入${selectedOption.label}，按回车确认`}
+                ref={inputRef}
                 value={field.value as string || ''}
                 onChange={e => field.onChange(e.target.value)}
                 onPressEnter={() => {
@@ -416,7 +445,7 @@ export const MultipleFilter: FC<MultipleFilterProps> = ({
                     optionId: selectedOption.id,
                     label: selectedOption.label,
                     value: dateObj,
-                    displayValue: format(dateObj, 'yyyy-MM-dd', { locale: zhCN }),
+                    displayValue: dayjs(dateObj).format('YYYY-MM-DD HH:mm:ss'),
                   })
                 }}
                 disabled={disabled}
@@ -433,12 +462,41 @@ export const MultipleFilter: FC<MultipleFilterProps> = ({
             render={({ field }) => (
               <DatePicker.RangePicker
                 className="w-full"
-                placeholder={['开始日期', '结束日期']}
+                format="YYYY-MM-DD HH:mm:ss"
+                showTime={{
+                  disabledTime: (_, type) => {
+                    if (type === 'end') {
+                      return {
+                        disabledHours: () => {
+                          const currentHour = dayjs().hour()
+                          return Array.from(
+                            { length: 24 - currentHour },
+                            (_, i) => currentHour + 1 + i,
+                          )
+                        },
+                        disabledMinutes: () => [],
+                        disabledSeconds: () => [],
+                      }
+                    }
+                    return {
+                      disabledHours: () => [],
+                      disabledMinutes: () => [],
+                      disabledSeconds: () => [],
+                    }
+                  },
+                  hideDisabledOptions: true,
+                  defaultValue: [
+                    dayjs('00:00:00', 'HH:mm:ss'),
+                    dayjs('23:59:59', 'HH:mm:ss'),
+                  ],
+                }}
+                placeholder={['开始时间', '结束时间']}
                 onChange={(dates) => {
                   if (!dates || !dates[0] || !dates[1])
                     return
+
                   const [startDate, endDate] = dates
-                  const dateRange = [startDate.toDate(), endDate.toDate()]
+                  const dateRange = [dayjs(startDate).format('YYYY-MM-DD HH:mm:ss'), dayjs(endDate).format('YYYY-MM-DD HH:mm:ss')]
                   field.onChange(dateRange)
 
                   // 选择日期范围后自动添加筛选条件
@@ -446,7 +504,7 @@ export const MultipleFilter: FC<MultipleFilterProps> = ({
                     optionId: selectedOption.id,
                     label: selectedOption.label,
                     value: dateRange,
-                    displayValue: `${format(startDate.toDate(), 'yyyy-MM-dd', { locale: zhCN })} 至 ${format(endDate.toDate(), 'yyyy-MM-dd', { locale: zhCN })}`,
+                    displayValue: `${dayjs(startDate).format('YYYY-MM-DD HH:mm:ss')} 至 ${dayjs(endDate).format('YYYY-MM-DD HH:mm:ss')}`,
                   })
                 }}
                 disabled={disabled}
@@ -460,7 +518,12 @@ export const MultipleFilter: FC<MultipleFilterProps> = ({
           onChange: (value) => {
             if (disabled)
               return
-            setValue('currentFilter.value', value)
+            addFilter({
+              optionId: selectedOption.id,
+              label: selectedOption.label,
+              value,
+              displayValue: selectedOption.renderDisplayValue?.(value) || JSON.stringify(value),
+            })
           },
           value: currentFilterValue,
           disabled,
@@ -469,10 +532,10 @@ export const MultipleFilter: FC<MultipleFilterProps> = ({
       default:
         return <div>暂不支持的筛选类型</div>
     }
-  }
+  }, [selectedOption, disabled, currentFilterValue, control, setValue, addFilter])
 
   return (
-    <FilterContainer className={`multiple-filter ${className}`}>
+    <FilterContainer className={`multiple-filter ${className} overflow-hidden`}>
       <FilterWrapper>
         {/* 搜索输入框 */}
         <InputWrapper>
@@ -560,6 +623,7 @@ export const MultipleFilter: FC<MultipleFilterProps> = ({
                     >
                       {filter.label}
                       :
+                      {' '}
                       {filter.displayValue}
                     </DisabledTag>
                   )
@@ -571,6 +635,7 @@ export const MultipleFilter: FC<MultipleFilterProps> = ({
                     >
                       {filter.label}
                       :
+                      {' '}
                       {filter.displayValue}
                     </Tag>
                   )
@@ -578,7 +643,7 @@ export const MultipleFilter: FC<MultipleFilterProps> = ({
 
             {appliedFilters.length > 0 && (
               <Button
-                type="text"
+                // type="text"
                 size="small"
                 onClick={resetAllFilters}
                 disabled={disabled}

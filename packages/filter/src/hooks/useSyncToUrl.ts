@@ -1,6 +1,7 @@
 import type { AppliedFilter } from '../types'
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { deserializeFilters, serializeFilters } from '../utils'
 
 interface UseSyncToUrlReturn {
   filters: AppliedFilter[]
@@ -20,32 +21,6 @@ export function useSyncToUrl(
   paramsKey = 'filters',
 ): UseSyncToUrlReturn {
   const [searchParams, setSearchParams] = useSearchParams()
-
-  // 将 AppliedFilter[] 转换为简化的 URL 格式 {optionId: value}
-  const serializeFilters = (filters: AppliedFilter[]): Record<string, any> => {
-    return filters.reduce((result, filter) => {
-      if (filter.value !== undefined && filter.value !== null) {
-        result[filter.optionId] = {
-          value: filter.value,
-          label: filter.label,
-          displayValue: filter.displayValue,
-        }
-      }
-      return result
-    }, {} as Record<string, any>)
-  }
-
-  // 将 URL 格式转换为 AppliedFilter[]
-  const deserializeFilters = (data: Record<string, any>): AppliedFilter[] => {
-    return Object.entries(data)
-      .filter(([_, value]) => value !== undefined && value !== null)
-      .map(([optionId, value]) => ({
-        optionId,
-        label: value.label || optionId,
-        value: value.value,
-        displayValue: value.displayValue || String(value.value),
-      }))
-  }
 
   // 解析当前 URL 的查询参数
   const parseFiltersFromUrl = (): AppliedFilter[] => {

@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 📚 项目文档
+    url: https://github.com/CaterpillarSoft/filter/blob/main/README.md
+    about: 查看项目文档获取更多信息
+  - name: 🤝 贡献指南
+    url: https://github.com/CaterpillarSoft/filter/blob/main/.github/CONTRIBUTING.md
+    about: 了解如何为项目做出贡献
